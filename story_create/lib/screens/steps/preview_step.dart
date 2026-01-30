@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -28,6 +29,7 @@ class PreviewStep extends StatefulWidget {
 class _PreviewStepState extends State<PreviewStep> {
   bool _isGenerating = false;
   late String _previewId;
+  Completer<String?>? _videoCompleter;
 
   @override
   void initState() {
@@ -57,17 +59,15 @@ class _PreviewStepState extends State<PreviewStep> {
       templateId: widget.storyData['template'] as String? ?? 'minimal',
     );
 
-    // Actual video generation for a professional result
-    final videoPath = await VideoService().generateStoryVideo(newStory);
-    if (videoPath != null) {
-      newStory.videoOutputPath = videoPath;
-    }
-
-    if (!mounted) return;
-
-    // Save story to Hive
+    // 1. Save story to Hive immediately so it appears in the list
     final storyService = Provider.of<StoryService>(context, listen: false);
     await storyService.addStory(newStory);
+
+    // 2. Reset and start video generation in background
+    _videoCompleter = Completer<String?>();
+    unawaited(_generateVideoInBackground(newStory, storyService));
+
+    if (!mounted) return;
 
     setState(() {
       _isGenerating = false;
@@ -76,56 +76,145 @@ class _PreviewStepState extends State<PreviewStep> {
     _showSuccessDialog(newStory);
   }
 
+  Future<void> _generateVideoInBackground(StoryModel story, StoryService storyService) async {
+    try {
+      final videoPath = await VideoService().generateStoryVideo(story);
+      if (videoPath != null) {
+        story.videoOutputPath = videoPath;
+        // Use direct save since it's a HiveObject and was already added to the box
+        await story.save();
+        // Notify listeners so UI (like HomeScreen) knows the video is ready
+        storyService.notifyListeners(); 
+        _videoCompleter?.complete(videoPath);
+      } else {
+        _videoCompleter?.complete(null);
+      }
+    } catch (e) {
+      debugPrint('Background video generation error: $e');
+      _videoCompleter?.complete(null);
+    }
+  }
+
   void _showSuccessDialog(StoryModel story) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Text('Story Created', style: TextStyle(fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black)),
-        content: Text(
-          'Your cinematic story is ready! Share the professional video with your friends.',
-          style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              // Prioritize sharing the generated video
-              if (story.videoOutputPath != null) {
-                await Share.shareXFiles(
-                  [XFile(story.videoOutputPath!)],
-                  text: '${story.title}\n\n${story.description}\n\nCreated with @bst2026',
-                  subject: story.title,
-                );
-              } else {
-                final files = story.imagePaths.map((path) => XFile(path)).toList();
-                if (files.isEmpty) {
-                  await Share.share(
-                    '${story.title}\n\n${story.description}\n\nCreated with @bst2026',
-                    subject: story.title,
-                  );
-                } else {
-                  await Share.shareXFiles(
-                    files,
-                    text: '${story.title}\n\n${story.description}\n\nCreated with @bst2026',
-                    subject: story.title,
-                  );
-                }
-              }
-            },
-            child: Text('SHARE VIDEO', style: TextStyle(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w900, letterSpacing: 1)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context); // Close dialog
-              widget.onComplete(); // Navigate back/complete
-            },
-            child: Text('DONE', style: TextStyle(color: isDark ? Colors.white : Colors.black, fontWeight: FontWeight.w900, letterSpacing: 1)),
-          ),
-        ],
-      ),
+      builder: (context) {
+        bool isSharing = false;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+              title: Text('Story Created', style: TextStyle(fontWeight: FontWeight.w900, color: isDark ? Colors.white : Colors.black)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Your story has been saved! We are processing the cinematic video in the background.',
+                    style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
+                  ),
+                  if (isSharing) ...[
+                    const SizedBox(height: 20),
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 12),
+                    const Text('Preparing your reel video...', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  ],
+                ],
+              ),
+              actions: [
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: isSharing ? null : () async {
+                          setDialogState(() => isSharing = true);
+                          
+                          try {
+                            String? videoPath = story.videoOutputPath;
+                            if (videoPath == null && _videoCompleter != null) {
+                              videoPath = await _videoCompleter!.future.timeout(
+                                const Duration(seconds: 45), // Increased timeout for reliability
+                                onTimeout: () => null,
+                              );
+                            }
+
+                            if (videoPath != null && File(videoPath).existsSync()) {
+                              // Share ONLY the video for maximum compatibility
+                              await Share.shareXFiles(
+                                [XFile(videoPath)],
+                                text: '${story.title}\n\nCreated with @bst2026',
+                                subject: story.title,
+                              );
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Video is still processing or failed. Try sharing photos instead.')),
+                                );
+                              }
+                            }
+                          } finally {
+                            if (context.mounted) {
+                              setDialogState(() => isSharing = false);
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDark ? Colors.white : Colors.black,
+                          foregroundColor: isDark ? Colors.black : Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Text(
+                          isSharing ? 'PROCESSING...' : 'SHARE REEL VIDEO', 
+                          style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: isSharing ? null : () async {
+                              final files = story.imagePaths.map((path) => XFile(path)).toList();
+                              if (files.isNotEmpty) {
+                                await Share.shareXFiles(
+                                  files,
+                                  text: '${story.title}\n\nCreated with @bst2026',
+                                  subject: story.title,
+                                );
+                              }
+                            },
+                            style: OutlinedButton.styleFrom(
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: const Text('SHARE PHOTOS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: TextButton(
+                            onPressed: isSharing ? null : () {
+                              Navigator.pop(context);
+                              widget.onComplete();
+                            },
+                            child: Text('DONE', style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

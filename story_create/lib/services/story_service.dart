@@ -14,14 +14,13 @@ class StoryService extends ChangeNotifier {
 
   Future<void> updateStory(String id, StoryModel updatedStory) async {
     final story = _storyBox.values.firstWhere((s) => s.id == id);
-    final index = story.key as int;
-    await _storyBox.putAt(index, updatedStory);
+    await _storyBox.put(story.key, updatedStory);
     notifyListeners();
   }
 
   Future<void> deleteStory(String id) async {
     final story = _storyBox.values.firstWhere((s) => s.id == id);
-    await story.delete();
+    await _storyBox.delete(story.key);
     notifyListeners();
   }
 

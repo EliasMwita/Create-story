@@ -44,19 +44,19 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     if (_story == null) return;
     
     final story = _story!;
+    final List<XFile> files = [];
     
-    // Prioritize video sharing if available
+    // 1. Add video if available
     if (story.videoOutputPath != null && File(story.videoOutputPath!).existsSync()) {
-      await Share.shareXFiles(
-        [XFile(story.videoOutputPath!)],
-        text: '${story.title}\n\n${story.description}\n\nCreated with @bst2026',
-        subject: story.title,
-      );
-      return;
+      files.add(XFile(story.videoOutputPath!));
     }
-
-    // Fallback to image sharing
-    final files = story.imagePaths.map((path) => XFile(path)).toList();
+    
+    // 2. Add all images
+    for (final path in story.imagePaths) {
+      if (File(path).existsSync()) {
+        files.add(XFile(path));
+      }
+    }
     
     if (files.isEmpty) {
       await Share.share(

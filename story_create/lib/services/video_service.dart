@@ -55,11 +55,10 @@ class VideoService {
   ) {
     final images = story.imagePaths;
     const double durationPerImage = 3.0; // seconds per image
-    const double transitionDuration = 0.5; // seconds for transition
     
     final command = StringBuffer();
     
-    // Input images
+    // Input images - optimized for speed and compatibility
     for (int i = 0; i < images.length; i++) {
       command.write('-loop 1 -t $durationPerImage -i "${images[i]}" ');
     }
@@ -69,48 +68,38 @@ class VideoService {
       command.write('-i "${story.musicPath}" ');
     }
     
-    // Video filter complex
+    // Video filter complex - Simplified for maximum reliability
     command.write('-filter_complex "');
     
-    // 1. Scale and prepare each input
+    // 1. Scale and prepare each input to a uniform 720p format
     for (int i = 0; i < images.length; i++) {
-      command.write('[$i:v]scale=1080:1920:force_original_aspect_ratio=decrease,'
-          'pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30[v$i]; ');
+      command.write('[$i:v]scale=720:1280:force_original_aspect_ratio=decrease,'
+          'pad=720:1280:(ow-iw)/2:(oh-ih)/2,setsar=1,fps=30,format=yuv420p[v$i]; ');
     }
     
-    // 2. Apply transitions (xfade)
-    // We combine them sequentially: [v0][v1]xfade -> [t0]; [t0][v2]xfade -> [t1]; etc.
-    if (images.length > 1) {
-      String lastOutput = '[v0]';
-      for (int i = 0; i < images.length - 1; i++) {
-        final String currentOutput = '[t$i]';
-        // Offset is cumulative: each image adds (duration - transition)
-        final double offset = (i + 1) * (durationPerImage - transitionDuration);
-        
-        command.write('$lastOutput[v${i + 1}]xfade=transition=fade:duration=$transitionDuration:offset=$offset$currentOutput; ');
-        lastOutput = currentOutput;
-      }
-      // Final video stream name
-      command.write('" -map "[t${images.length - 2}]" ');
-    } else {
-      // Single image, no transitions
-      command.write('" -map "[v0]" ');
+    // 2. Concatenate all processed video streams
+    for (int i = 0; i < images.length; i++) {
+      command.write('[v$i]');
     }
+    command.write('concat=n=${images.length}:v=1:a=0[outv]" ');
+    
+    // Map the final streams
+    command.write('-map "[outv]" ');
     
     // Add audio if exists
     if (story.musicPath != null) {
       command.write('-map ${images.length}:a ');
       command.write('-shortest '); // Trim audio to video length
-      command.write('-c:a aac -b:a 256k '); // High quality audio
+      command.write('-c:a aac -b:a 192k '); 
     } else {
       command.write('-an '); // No audio
     }
     
-    // Output settings - High Quality
+    // Output settings - Ultrafast preset for immediate results
     command.write(
       '-c:v libx264 '
-      '-preset medium '
-      '-crf 18 '
+      '-preset ultrafast '
+      '-crf 23 '
       '-pix_fmt yuv420p '
       '-movflags +faststart '
       '-y ' 
