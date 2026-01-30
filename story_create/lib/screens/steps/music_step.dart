@@ -6,11 +6,15 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 
 class MusicStep extends StatefulWidget {
+  final String? initialMusic;
+  final double? initialVolume;
   final Function(Map<String, dynamic>) onNext;
   final VoidCallback onBack;
   
   const MusicStep({
     super.key,
+    this.initialMusic,
+    this.initialVolume,
     required this.onNext,
     required this.onBack,
   });
@@ -20,11 +24,46 @@ class MusicStep extends StatefulWidget {
 }
 
 class _MusicStepState extends State<MusicStep> {
-  String? _selectedMusic;
+  late String? _selectedMusic = widget.initialMusic;
   String? _customMusicName;
-  double _volume = 100.0;
+  late double _volume = widget.initialVolume ?? 100.0;
   
-  final List<Map<String, dynamic>> _musicOptions = [];
+  final List<Map<String, dynamic>> _musicOptions = [
+    {
+      'id': 'summer_vibe',
+      'name': 'Summer Vibe',
+      'genre': 'Uplifting',
+      'path': 'assets/music/summer.mp3',
+    },
+    {
+      'id': 'lofi_study',
+      'name': 'Lofi Study',
+      'genre': 'Chill',
+      'path': 'assets/music/lofi.mp3',
+    },
+    {
+      'id': 'adventure',
+      'name': 'Adventure',
+      'genre': 'Cinematic',
+      'path': 'assets/music/adventure.mp3',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (_selectedMusic != null) {
+      // Check if it's one of the presets
+      final preset = _musicOptions.any((m) => m['path'] == _selectedMusic);
+      if (!preset) {
+        if (_selectedMusic!.contains('recording')) {
+          _customMusicName = 'My Recording';
+        } else {
+          _customMusicName = _selectedMusic!.split('/').last;
+        }
+      }
+    }
+  }
 
   final AudioRecorder _audioRecorder = AudioRecorder();
   bool _isRecording = false;

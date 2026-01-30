@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class PlaceStep extends StatefulWidget {
+  final String? initialPlace;
   final Function(Map<String, dynamic>) onNext;
   final VoidCallback onBack;
   
   const PlaceStep({
     super.key,
+    this.initialPlace,
     required this.onNext,
     required this.onBack,
   });
@@ -16,8 +18,8 @@ class PlaceStep extends StatefulWidget {
 }
 
 class _PlaceStepState extends State<PlaceStep> {
-  final _placeController = TextEditingController();
-  bool _useLocation = false;
+  late final _placeController = TextEditingController(text: widget.initialPlace);
+  late bool _useLocation = widget.initialPlace == 'Current Location';
   
   @override
   void dispose() {

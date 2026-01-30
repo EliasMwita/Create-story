@@ -37,6 +37,36 @@ class _StoryReelPlayerState extends State<StoryReelPlayer> {
   }
 
   @override
+  void didUpdateWidget(StoryReelPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // Check if story data changed
+    final bool storyChanged = widget.story.id != oldWidget.story.id ||
+        widget.story.imagePaths.length != oldWidget.story.imagePaths.length ||
+        widget.story.musicPath != oldWidget.story.musicPath ||
+        widget.story.templateId != oldWidget.story.templateId;
+
+    bool contentChanged = storyChanged;
+    if (!contentChanged && widget.story.imagePaths.isNotEmpty) {
+      for (int i = 0; i < widget.story.imagePaths.length; i++) {
+        if (widget.story.imagePaths[i] != oldWidget.story.imagePaths[i]) {
+          contentChanged = true;
+          break;
+        }
+      }
+    }
+
+    if (contentChanged) {
+      _timer?.cancel();
+      _audioPlayer.stop();
+      _currentPage = 0;
+      if (widget.autoPlay) {
+        _startPlayback();
+      }
+    }
+  }
+
+  @override
   void dispose() {
     _timer?.cancel();
     _pageController.dispose();
@@ -48,13 +78,17 @@ class _StoryReelPlayerState extends State<StoryReelPlayer> {
     if (widget.story.imagePaths.isNotEmpty) {
       _timer = Timer.periodic(const Duration(seconds: 3), (timer) {
         if (!mounted) return;
+        if (widget.story.imagePaths.isEmpty) return;
+        
         setState(() {
           _currentPage = (_currentPage + 1) % widget.story.imagePaths.length;
-          _pageController.animateToPage(
-            _currentPage,
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeInOut,
-          );
+          if (_pageController.hasClients) {
+            _pageController.animateToPage(
+              _currentPage,
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeInOut,
+            );
+          }
         });
       });
     }
@@ -66,6 +100,7 @@ class _StoryReelPlayerState extends State<StoryReelPlayer> {
 
   Future<void> _playMusic(String path) async {
     try {
+      await _audioPlayer.stop();
       if (path.startsWith('assets/')) {
         await _audioPlayer.play(AssetSource(path.replaceFirst('assets/', '')));
       } else {
@@ -83,39 +118,54 @@ class _StoryReelPlayerState extends State<StoryReelPlayer> {
     
     return AspectRatio(
       aspectRatio: 9 / 16,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          children: [
-            // PageView for Media Reel
-            Positioned.fill(
-              child: widget.story.imagePaths.isNotEmpty
-                  ? PageView.builder(
-                      controller: _pageController,
-                      itemCount: widget.story.imagePaths.length,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        return Image.file(
-                          File(widget.story.imagePaths[index]),
-                          fit: BoxFit.cover,
-                        );
-                      },
-                    )
-                  : const Center(
-                      child: Icon(Icons.image_outlined, size: 80, color: Colors.grey),
-                    ),
-            ),
+      child: Material(
+        color: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Stack(
+            children: [
+              // PageView for Media Reel
+              Positioned.fill(
+                child: widget.story.imagePaths.isNotEmpty
+                    ? PageView.builder(
+                        controller: _pageController,
+                        itemCount: widget.story.imagePaths.length,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          return Image.file(
+                            File(widget.story.imagePaths[index]),
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Image not found',
+                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      )
+                    : const Center(
+                        child: Icon(Icons.image_outlined, size: 80, color: Colors.grey),
+                      ),
+              ),
 
-            // Template Overlay
-            TemplateRegistry.getOverlay(templateId, borderRadius: 16),
+              // Template Overlay
+              TemplateRegistry.getOverlay(templateId, borderRadius: 16),
 
-            // Text Overlay
-            Positioned(
-              bottom: 60,
-              left: 24,
-              right: 24,
-              child: Material(
-                color: Colors.transparent,
+              // Text Overlay
+              Positioned(
+                bottom: 60,
+                left: 24,
+                right: 24,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -159,32 +209,32 @@ class _StoryReelPlayerState extends State<StoryReelPlayer> {
                   ],
                 ),
               ),
-            ),
 
-            // Music Badge
-            if (widget.story.musicPath != null)
-              Positioned(
-                top: 20,
-                right: 20,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.music_note, color: Colors.white, size: 14),
-                      const SizedBox(width: 4),
-                      Text(
-                        MusicUtils.getMusicName(widget.story.musicPath!),
-                        style: const TextStyle(color: Colors.white, fontSize: 10),
-                      ),
-                    ],
+              // Music Badge
+              if (widget.story.musicPath != null)
+                Positioned(
+                  top: 20,
+                  right: 20,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.music_note, color: Colors.white, size: 14),
+                        const SizedBox(width: 4),
+                        Text(
+                          MusicUtils.getMusicName(widget.story.musicPath!),
+                          style: const TextStyle(color: Colors.white, fontSize: 10),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

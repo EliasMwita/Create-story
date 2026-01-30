@@ -4,17 +4,18 @@ import 'package:story_create/models/mood_model.dart';
 import 'package:story_create/widgets/mood_chip.dart';
 
 class MoodStep extends StatefulWidget {
+  final String? initialMood;
   final Function(Map<String, dynamic>) onNext;
   final VoidCallback onBack;
 
-  const MoodStep({super.key, required this.onNext, required this.onBack});
+  const MoodStep({super.key, this.initialMood, required this.onNext, required this.onBack});
 
   @override
   State<MoodStep> createState() => _MoodStepState();
 }
 
 class _MoodStepState extends State<MoodStep> {
-  String? _selectedMood;
+  late String? _selectedMood = widget.initialMood;
 
   @override
   Widget build(BuildContext context) {

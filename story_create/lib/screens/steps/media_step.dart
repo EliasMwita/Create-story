@@ -3,16 +3,17 @@ import 'package:image_picker/image_picker.dart';
 import 'package:story_create/widgets/image_grid_item.dart';
 
 class MediaStep extends StatefulWidget {
+  final List<String> initialImages;
   final Function(Map<String, dynamic>) onNext;
 
-  const MediaStep({super.key, required this.onNext});
+  const MediaStep({super.key, this.initialImages = const [], required this.onNext});
 
   @override
   State<MediaStep> createState() => _MediaStepState();
 }
 
 class _MediaStepState extends State<MediaStep> {
-  final List<String> _images = [];
+  late final List<String> _images = List.from(widget.initialImages);
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImageFromCamera() async {

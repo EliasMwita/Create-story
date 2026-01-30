@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:story_create/models/story_model.dart';
 import 'package:story_create/services/story_service.dart';
-import 'package:story_create/services/video_service.dart';
 import 'package:story_create/widgets/story_reel_player.dart';
 import 'package:story_create/widgets/templates/template_registry.dart';
 
@@ -27,10 +26,12 @@ class PreviewStep extends StatefulWidget {
 class _PreviewStepState extends State<PreviewStep> {
   bool _isGenerating = false;
   double _progress = 0.0;
-  
+  late String _previewId;
+
   @override
   void initState() {
     super.initState();
+    _previewId = DateTime.now().millisecondsSinceEpoch.toString();
   }
 
   @override
@@ -38,7 +39,7 @@ class _PreviewStepState extends State<PreviewStep> {
     super.dispose();
   }
 
-  Future<void> _generateVideo() async {
+  Future<void> _saveStory() async {
     setState(() {
       _isGenerating = true;
       _progress = 0.0;
@@ -56,34 +57,28 @@ class _PreviewStepState extends State<PreviewStep> {
       templateId: widget.storyData['template'] as String? ?? 'minimal',
     );
 
-    // Call actual video generation
-    final videoService = VideoService();
-    final videoPath = await videoService.generateStoryVideo(newStory);
+    // Simulate preparation for UX (very brief)
+    for (int i = 0; i <= 5; i++) {
+      await Future.delayed(const Duration(milliseconds: 100));
+      if (mounted) {
+        setState(() {
+          _progress = i / 5.0;
+        });
+      }
+    }
 
     if (!mounted) return;
 
-    if (videoPath != null) {
-      // Update story with actual video path
-      final updatedStory = newStory.copyWith(videoOutputPath: videoPath);
-      
-      // Save story to Hive
-      final storyService = Provider.of<StoryService>(context, listen: false);
-      await storyService.addStory(updatedStory);
+    // Save story to Hive
+    final storyService = Provider.of<StoryService>(context, listen: false);
+    await storyService.addStory(newStory);
 
-      setState(() {
-        _isGenerating = false;
-        _progress = 1.0;
-      });
+    setState(() {
+      _isGenerating = false;
+      _progress = 1.0;
+    });
 
-      _showSuccessDialog();
-    } else {
-      setState(() {
-        _isGenerating = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to generate video. Please try again.')),
-      );
-    }
+    _showSuccessDialog();
   }
 
   void _showSuccessDialog() {
@@ -117,12 +112,14 @@ class _PreviewStepState extends State<PreviewStep> {
     final template = TemplateRegistry.getTemplate(templateId);
     final bgColors = template.colors;
     
-    // Create a temporary story model for the reel player
-    final tempStory = StoryModel.create(
+    // Create a temporary story model for the reel player with a stable ID
+    final tempStory = StoryModel(
+      id: _previewId,
       title: widget.storyData['title'] as String? ?? 'YOUR TITLE',
       description: widget.storyData['description'] as String? ?? '',
       mood: widget.storyData['mood'] as String? ?? 'Happy',
       place: widget.storyData['place'] as String? ?? 'No location',
+      date: DateTime.now(),
       imagePaths: List<String>.from(widget.storyData['images'] as List<String>? ?? []),
       musicPath: widget.storyData['music'] as String?,
       templateId: templateId,
@@ -220,7 +217,7 @@ class _PreviewStepState extends State<PreviewStep> {
                 Expanded(
                   flex: 2,
                   child: ElevatedButton(
-                    onPressed: _isGenerating ? null : _generateVideo,
+                    onPressed: _isGenerating ? null : _saveStory,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
                       foregroundColor: Colors.black,

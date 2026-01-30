@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
 class TextStep extends StatefulWidget {
+  final String? initialTitle;
+  final String? initialDescription;
   final Function(Map<String, dynamic>) onNext;
   final VoidCallback onBack;
   
   const TextStep({
     super.key,
+    this.initialTitle,
+    this.initialDescription,
     required this.onNext,
     required this.onBack,
   });
@@ -15,8 +19,8 @@ class TextStep extends StatefulWidget {
 }
 
 class _TextStepState extends State<TextStep> {
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  late final _titleController = TextEditingController(text: widget.initialTitle);
+  late final _descriptionController = TextEditingController(text: widget.initialDescription);
   
   @override
   void dispose() {

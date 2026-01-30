@@ -8,6 +8,7 @@ import 'package:story_create/models/mood_model.dart';
 import 'package:story_create/utils/music_utils.dart';
 import 'package:story_create/widgets/story_video_player.dart';
 import 'package:story_create/widgets/story_reel_player.dart';
+import 'package:story_create/widgets/templates/template_registry.dart';
 
 class StoryDetailScreen extends StatefulWidget {
   final String storyId;
@@ -169,6 +170,8 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                             color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
                           ),
                         ),
+                      // Add Template Overlay to Header
+                      TemplateRegistry.getOverlay(story.templateId ?? 'minimal'),
                       const DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(

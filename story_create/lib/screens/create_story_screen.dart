@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'steps/template_step.dart';
 import 'steps/media_step.dart';
 import 'steps/text_step.dart';
 import 'steps/mood_step.dart';
@@ -28,17 +27,16 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
   void initState() {
     super.initState();
     _storyData = [
-      if (!widget.isBlank) {'template': widget.initialTemplateId ?? 'minimal'}, // Step 0: SELECT STYLE
-      {'images': [], 'order': []}, // Step 1 -> 0 if blank
-      {'title': '', 'description': ''}, // Step 2 -> 1 if blank
-      {'mood': ''}, // Step 3 -> 2 if blank
-      {'place': ''}, // Step 4 -> 3 if blank
-      {'music': null, 'volume': 100.0}, // Step 5 -> 4 if blank
-      {}, // Step 6 -> 5 if blank: Preview
+      {'template': widget.isBlank ? 'none' : (widget.initialTemplateId ?? 'minimal')},
+      {'images': [], 'order': []}, // Step 0: IMPORT MEDIA
+      {'title': '', 'description': ''}, // Step 1: STORY DETAILS
+      {'mood': ''}, // Step 2: SET THE VIBE
+      {'place': ''}, // Step 3: TAG LOCATION
+      {'music': null, 'volume': 100.0}, // Step 4: ADD SOUNDTRACK
+      {}, // Step 5: FINAL PREVIEW
     ];
 
     _stepTitles = [
-      if (!widget.isBlank) 'SELECT STYLE',
       'IMPORT MEDIA',
       'STORY DETAILS',
       'SET THE VIBE',
@@ -185,44 +183,43 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
               physics: const NeverScrollableScrollPhysics(),
               onPageChanged: (index) => setState(() => _currentStep = index),
               children: [
-                if (!widget.isBlank)
-                  TemplateStep(
-                    initialTemplateId: widget.initialTemplateId,
-                    onNext: (data) {
-                      _updateStepData(0, data);
-                      _nextStep();
-                    },
-                  ),
                 MediaStep(
+                  initialImages: List<String>.from(_storyData[1]['images'] ?? []),
                   onNext: (data) {
-                    _updateStepData(widget.isBlank ? 0 : 1, data);
+                    _updateStepData(1, data);
                     _nextStep();
                   },
                 ),
                 TextStep(
+                  initialTitle: _storyData[2]['title'],
+                  initialDescription: _storyData[2]['description'],
                   onNext: (data) {
-                    _updateStepData(widget.isBlank ? 1 : 2, data);
+                    _updateStepData(2, data);
                     _nextStep();
                   },
                   onBack: _previousStep,
                 ),
                 MoodStep(
+                  initialMood: _storyData[3]['mood'],
                   onNext: (data) {
-                    _updateStepData(widget.isBlank ? 2 : 3, data);
+                    _updateStepData(3, data);
                     _nextStep();
                   },
                   onBack: _previousStep,
                 ),
                 PlaceStep(
+                  initialPlace: _storyData[4]['place'],
                   onNext: (data) {
-                    _updateStepData(widget.isBlank ? 3 : 4, data);
+                    _updateStepData(4, data);
                     _nextStep();
                   },
                   onBack: _previousStep,
                 ),
                 MusicStep(
+                  initialMusic: _storyData[5]['music'],
+                  initialVolume: _storyData[5]['volume'],
                   onNext: (data) {
-                    _updateStepData(widget.isBlank ? 4 : 5, data);
+                    _updateStepData(5, data);
                     _nextStep();
                   },
                   onBack: _previousStep,
