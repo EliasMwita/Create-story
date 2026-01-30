@@ -119,7 +119,7 @@ class _StoryReelPlayerState extends State<StoryReelPlayer> {
     return AspectRatio(
       aspectRatio: 9 / 16,
       child: Material(
-        color: Colors.transparent,
+        type: MaterialType.transparency,
         child: ClipRRect(
           borderRadius: BorderRadius.circular(16),
           child: Stack(
@@ -142,9 +142,13 @@ class _StoryReelPlayerState extends State<StoryReelPlayer> {
                                   children: [
                                     const Icon(Icons.broken_image, size: 40, color: Colors.grey),
                                     const SizedBox(height: 8),
-                                    Text(
+                                    const Text(
                                       'Image not found',
-                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                      style: TextStyle(
+                                        color: Colors.grey, 
+                                        fontSize: 12,
+                                        decoration: TextDecoration.none,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -160,6 +164,57 @@ class _StoryReelPlayerState extends State<StoryReelPlayer> {
 
               // Template Overlay
               TemplateRegistry.getOverlay(templateId, borderRadius: 16),
+
+              // Small Branding Logo
+              Positioned(
+                top: 20,
+                left: 20,
+                child: Opacity(
+                  opacity: 0.8,
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    height: 24,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+
+              // "Created with @bst2026" Watermark
+              Positioned(
+                bottom: 20,
+                right: 24,
+                child: Opacity(
+                  opacity: 0.7,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/images/logo.png',
+                          height: 12,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(width: 4),
+                        const Text(
+                          '@bst2026',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
 
               // Text Overlay
               Positioned(
@@ -227,7 +282,11 @@ class _StoryReelPlayerState extends State<StoryReelPlayer> {
                         const SizedBox(width: 4),
                         Text(
                           MusicUtils.getMusicName(widget.story.musicPath!),
-                          style: const TextStyle(color: Colors.white, fontSize: 10),
+                          style: const TextStyle(
+                            color: Colors.white, 
+                            fontSize: 10,
+                            decoration: TextDecoration.none,
+                          ),
                         ),
                       ],
                     ),

@@ -19,10 +19,12 @@ class _MoodStepState extends State<MoodStep> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.06, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -31,22 +33,29 @@ class _MoodStepState extends State<MoodStep> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'What\'s the vibe?',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  "What's the vibe?",
+                  style: TextStyle(
+                    fontSize: (size.width * 0.08).clamp(24.0, 32.0),
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1,
+                    color: isDark ? Colors.white : Colors.black,
+                    height: 1.1,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(
                   'Select a mood to set the tone and music for your story.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
+                  style: TextStyle(
+                    fontSize: 15,
+                    height: 1.5,
+                    color: isDark ? Colors.white38 : Colors.black38,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
                 // Mood Grid
                 Expanded(
                   child: GridView.builder(
+                    physics: const BouncingScrollPhysics(),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 12,
@@ -74,47 +83,46 @@ class _MoodStepState extends State<MoodStep> {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 32),
 
           // Navigation Buttons
           Row(
             children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: widget.onBack,
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    'Back',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              IconButton.filledTonal(
+                onPressed: widget.onBack,
+                style: IconButton.styleFrom(
+                  padding: const EdgeInsets.all(20),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
+                icon: const Icon(Icons.arrow_back_rounded),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
-                flex: 2,
                 child: ElevatedButton(
-                  onPressed: _selectedMood == null
-                      ? null
-                      : () {
-                          widget.onNext({'mood': _selectedMood!});
-                        },
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    widget.onNext({'mood': _selectedMood ?? 'Happy'});
+                  },
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: isDark ? Colors.white : Colors.black,
+                    foregroundColor: isDark ? Colors.black : Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     elevation: 0,
                   ),
-                  child: const Text('Continue'),
+                  child: Text(
+                    _selectedMood == null ? 'SKIP & CONTINUE' : 'CONTINUE',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
+          SizedBox(height: MediaQuery.paddingOf(context).bottom + 12),
         ],
       ),
     );

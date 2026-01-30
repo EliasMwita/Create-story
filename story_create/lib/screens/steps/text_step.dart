@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class TextStep extends StatefulWidget {
   final String? initialTitle;
@@ -31,40 +32,50 @@ class _TextStepState extends State<TextStep> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.06, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Story Details',
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
+                    style: TextStyle(
+                      fontSize: (size.width * 0.08).clamp(24.0, 32.0),
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1,
+                      color: isDark ? Colors.white : Colors.black,
+                      height: 1.1,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Text(
-                    'Give your story a catchy title and description.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                    'Give your story a catchy title and description to make it memorable.',
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.5,
+                      color: isDark ? Colors.white38 : Colors.black38,
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 40),
                   
                   // Title Input Section
                   Text(
-                    'Title',
-                    style: theme.textTheme.labelLarge?.copyWith(
+                    'TITLE',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
                       color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -72,17 +83,28 @@ class _TextStepState extends State<TextStep> {
                     controller: _titleController,
                     decoration: InputDecoration(
                       hintText: 'What\'s your story called?',
+                      hintStyle: TextStyle(color: isDark ? Colors.white24 : Colors.black26),
                       counterText: '',
                       filled: true,
-                      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                      fillColor: theme.colorScheme.surfaceContainerLow,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                     ),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                      letterSpacing: -0.3,
                     ),
                     maxLength: 50,
                     onChanged: (_) => setState(() {}),
@@ -91,10 +113,12 @@ class _TextStepState extends State<TextStep> {
                   
                   // Description Section
                   Text(
-                    'Description',
-                    style: theme.textTheme.labelLarge?.copyWith(
+                    'DESCRIPTION',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.5,
                       color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -102,17 +126,26 @@ class _TextStepState extends State<TextStep> {
                     controller: _descriptionController,
                     decoration: InputDecoration(
                       hintText: 'Share a little more about this story...',
+                      hintStyle: TextStyle(color: isDark ? Colors.white24 : Colors.black26),
                       alignLabelWithHint: true,
                       filled: true,
-                      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                      fillColor: theme.colorScheme.surfaceContainerLow,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.all(20),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide(color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide(color: theme.colorScheme.primary, width: 2),
+                      ),
+                      contentPadding: const EdgeInsets.all(24),
                     ),
-                    style: theme.textTheme.bodyLarge,
-                    maxLines: 5,
+                    style: const TextStyle(fontSize: 16, height: 1.5),
+                    maxLines: 4,
                     maxLength: 200,
                   ),
                 ],
@@ -120,50 +153,50 @@ class _TextStepState extends State<TextStep> {
             ),
           ),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           
           // Navigation Buttons
           Row(
             children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: widget.onBack,
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    'Back',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              IconButton.filledTonal(
+                onPressed: widget.onBack,
+                style: IconButton.styleFrom(
+                  padding: const EdgeInsets.all(20),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
+                icon: const Icon(Icons.arrow_back_rounded),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
-                flex: 2,
                 child: ElevatedButton(
-                  onPressed: _titleController.text.trim().isEmpty
-                      ? null
-                      : () {
-                          widget.onNext({
-                            'title': _titleController.text.trim(),
-                            'description': _descriptionController.text.trim(),
-                          });
-                        },
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    final title = _titleController.text.trim();
+                    widget.onNext({
+                      'title': title,
+                      'description': _descriptionController.text.trim(),
+                    });
+                  },
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: isDark ? Colors.white : Colors.black,
+                    foregroundColor: isDark ? Colors.black : Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     elevation: 0,
                   ),
-                  child: const Text('Continue'),
+                  child: const Text(
+                    'CONTINUE',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
+          SizedBox(height: MediaQuery.paddingOf(context).bottom + 12),
         ],
       ),
     );

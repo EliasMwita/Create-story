@@ -25,6 +25,11 @@ class StoryService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> deleteAllStories() async {
+    await _storyBox.clear();
+    notifyListeners();
+  }
+
   StoryModel? getStory(String id) {
     try {
       return _storyBox.values.firstWhere((s) => s.id == id);

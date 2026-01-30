@@ -1,14 +1,16 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:story_create/models/story_model.dart';
 import 'package:story_create/services/story_service.dart';
 import 'package:story_create/models/mood_model.dart';
 import 'package:story_create/utils/music_utils.dart';
 import 'package:story_create/widgets/story_video_player.dart';
 import 'package:story_create/widgets/story_reel_player.dart';
-import 'package:story_create/widgets/templates/template_registry.dart';
+import 'package:story_create/utils/colors.dart';
 
 class StoryDetailScreen extends StatefulWidget {
   final String storyId;
@@ -38,11 +40,36 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     });
   }
 
-  void _shareStory() {
-    // Implement share functionality
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Sharing story...')));
+  void _shareStory() async {
+    if (_story == null) return;
+    
+    final story = _story!;
+    
+    // Prioritize video sharing if available
+    if (story.videoOutputPath != null && File(story.videoOutputPath!).existsSync()) {
+      await Share.shareXFiles(
+        [XFile(story.videoOutputPath!)],
+        text: '${story.title}\n\n${story.description}\n\nCreated with @bst2026',
+        subject: story.title,
+      );
+      return;
+    }
+
+    // Fallback to image sharing
+    final files = story.imagePaths.map((path) => XFile(path)).toList();
+    
+    if (files.isEmpty) {
+      await Share.share(
+        '${story.title}\n\n${story.description}\n\nCreated with @bst2026',
+        subject: story.title,
+      );
+    } else {
+      await Share.shareXFiles(
+        files,
+        text: '${story.title}\n\n${story.description}\n\nCreated with @bst2026',
+        subject: story.title,
+      );
+    }
   }
 
   void _deleteStory() {
@@ -84,11 +111,15 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -100,7 +131,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -109,40 +140,42 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     }
 
     final story = _story!;
+    final double horizontalPadding = size.width * 0.06;
 
     return Stack(
       children: [
         Scaffold(
+          backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
           body: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
               SliverAppBar(
-                expandedHeight: MediaQuery.of(context).size.height * 0.45,
+                expandedHeight: size.height * 0.5,
                 pinned: true,
                 stretch: true,
-                backgroundColor: Theme.of(context).colorScheme.surface,
+                backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
                 leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18),
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.black26,
-                    foregroundColor: Colors.white,
+                    backgroundColor: isDark ? Colors.black45 : Colors.white70,
+                    foregroundColor: isDark ? Colors.white : Colors.black,
                   ),
                   onPressed: () => Navigator.pop(context),
                 ),
                 actions: [
                   IconButton(
-                    icon: const Icon(Icons.share_outlined),
+                    icon: const Icon(Icons.share_rounded, size: 18),
                     style: IconButton.styleFrom(
-                      backgroundColor: Colors.black26,
-                      foregroundColor: Colors.white,
+                      backgroundColor: isDark ? Colors.black45 : Colors.white70,
+                      foregroundColor: isDark ? Colors.white : Colors.black,
                     ),
                     onPressed: _shareStory,
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline),
+                    icon: const Icon(Icons.delete_outline_rounded, size: 18),
                     style: IconButton.styleFrom(
-                      backgroundColor: Colors.black26,
-                      foregroundColor: Colors.white,
+                      backgroundColor: isDark ? Colors.black45 : Colors.white70,
+                      foregroundColor: isDark ? Colors.white : Colors.black,
                     ),
                     onPressed: _deleteStory,
                   ),
@@ -156,59 +189,45 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                   background: Stack(
                     fit: StackFit.expand,
                     children: [
-                      if (story.imagePaths.isNotEmpty)
-                        Image.file(
-                          File(story.imagePaths.first),
-                          fit: BoxFit.cover,
-                        )
-                      else
-                        Container(
-                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          child: Icon(
-                            Icons.photo_library_outlined,
-                            size: 64,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                          ),
-                        ),
-                      // Add Template Overlay to Header
-                      TemplateRegistry.getOverlay(story.templateId ?? 'minimal'),
+                      StoryReelPlayer(
+                        story: story,
+                        autoPlay: true,
+                      ),
                       const DecoratedBox(
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Colors.black45,
+                              Colors.black38,
                               Colors.transparent,
                               Colors.transparent,
-                              Colors.black87,
+                              Colors.black54,
                             ],
-                            stops: [0.0, 0.2, 0.5, 1.0],
+                            stops: [0.0, 0.2, 0.7, 1.0],
                           ),
                         ),
                       ),
                       Center(
                         child: GestureDetector(
                           onTap: _playVideo,
-                          child: Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              shape: BoxShape.circle,
-                              border: Border.all(color: Colors.white.withValues(alpha: 0.8), width: 2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.2),
-                                  blurRadius: 20,
-                                  spreadRadius: 5,
+                          child: ClipOval(
+                            child: BackdropFilter(
+                              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                              child: Container(
+                                width: 64,
+                                height: 64,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.15),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.white.withValues(alpha: 0.5), width: 1.5),
                                 ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.play_arrow_rounded,
-                              color: Colors.white,
-                              size: 48,
+                                child: const Icon(
+                                  Icons.play_arrow_rounded,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -219,7 +238,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
               ),
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 32),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -227,43 +246,31 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
+                              horizontal: 12,
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(12),
                               color: Mood.fromName(story.mood).actualColor,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Mood.fromName(story.mood).actualColor.withValues(alpha: 0.3),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
                             ),
                             child: Text(
                               story.mood.toUpperCase(),
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 10,
+                                fontSize: 9,
                                 fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2,
+                                letterSpacing: 1.5,
                               ),
                             ),
                           ),
                           const Spacer(),
-                          Icon(
-                            Icons.calendar_today_outlined,
-                            size: 14,
-                            color: Theme.of(context).colorScheme.outline,
-                          ),
-                          const SizedBox(width: 8),
                           Text(
-                            DateFormat('MMMM dd, yyyy').format(story.date),
+                            DateFormat('MMM dd, yyyy').format(story.date).toUpperCase(),
                             style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Theme.of(context).colorScheme.outline,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                              color: isDark ? Colors.white24 : Colors.black26,
                             ),
                           ),
                         ],
@@ -271,72 +278,106 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                       const SizedBox(height: 24),
                       Text(
                         story.title,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.5,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
+                        style: TextStyle(
+                          fontSize: (size.width * 0.08).clamp(28.0, 36.0),
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1,
+                          color: isDark ? Colors.white : Colors.black,
+                          height: 1.1,
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      if (story.description.isNotEmpty)
+                      if (story.description.isNotEmpty) ...[
+                        const SizedBox(height: 16),
                         Text(
                           story.description,
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                height: 1.6,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                                letterSpacing: 0.2,
-                              ),
-                        ),
-                      if (story.place.isNotEmpty && story.place != 'No location') ...[
-                        const SizedBox(height: 20),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.4),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Icon(
-                                Icons.location_on_rounded,
-                                size: 16,
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              story.place,
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                                color: Theme.of(context).colorScheme.onSurface,
-                              ),
-                            ),
-                          ],
+                          style: TextStyle(
+                            fontSize: 16,
+                            height: 1.6,
+                            color: isDark ? Colors.white70 : Colors.black87,
+                            letterSpacing: 0.1,
+                          ),
                         ),
                       ],
-                      const SizedBox(height: 32),
+                      if (story.place.isNotEmpty && story.place != 'No location') ...[
+                        const SizedBox(height: 32),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.location_on_rounded,
+                                  size: 16,
+                                  color: isDark ? Colors.white70 : Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'LOCATION',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 1.2,
+                                        color: isDark ? Colors.white38 : Colors.black38,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      story.place,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 48),
                       if (story.imagePaths.length > 1) ...[
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text(
+                            const Text(
                               'Gallery',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.5,
+                              ),
                             ),
                             Text(
-                              '${story.imagePaths.length} items',
+                              '${story.imagePaths.length} ITEMS',
                               style: TextStyle(
-                                fontSize: 13,
-                                color: Theme.of(context).colorScheme.outline,
-                                fontWeight: FontWeight.w500,
+                                fontSize: 10,
+                                color: isDark ? Colors.white24 : Colors.black26,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.5,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
                         GridView.builder(
                           shrinkWrap: true,
                           padding: EdgeInsets.zero,
@@ -349,44 +390,34 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                           ),
                           itemCount: story.imagePaths.length,
                           itemBuilder: (context, index) {
-                            return Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.05),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: Image.file(
-                                  File(story.imagePaths[index]),
-                                  fit: BoxFit.cover,
-                                ),
+                            return ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.file(
+                                File(story.imagePaths[index]),
+                                fit: BoxFit.cover,
                               ),
                             );
                           },
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 48),
                       ],
                       if (story.musicPath != null) ...[
-                        Text(
+                        const Text(
                           'Soundtrack',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                          ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(20),
-                            color: Theme.of(context).colorScheme.surfaceContainerLow,
+                            color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
                             border: Border.all(
-                              color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.3),
+                              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
                             ),
                           ),
                           child: Row(
@@ -394,14 +425,10 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(12),
+                                  color: isDark ? Colors.white10 : Colors.black87,
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
-                                child: const Icon(
-                                  Icons.music_note_rounded,
-                                  color: Colors.white,
-                                  size: 24,
-                                ),
+                                child: const Icon(Icons.music_note_rounded, color: Colors.white, size: 24),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -420,7 +447,7 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                                       'Ambient audio track',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Theme.of(context).colorScheme.outline,
+                                        color: isDark ? Colors.white38 : Colors.black38,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),

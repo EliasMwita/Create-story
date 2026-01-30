@@ -9,6 +9,7 @@ import 'package:story_create/widgets/story_card.dart';
 import 'package:story_create/widgets/template_preview_card.dart';
 import 'package:story_create/utils/colors.dart';
 import 'package:story_create/widgets/templates/template_registry.dart';
+import 'package:story_create/screens/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -51,14 +52,27 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good Morning,';
+    if (hour < 17) return 'Good Afternoon,';
+    return 'Good Evening,';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     
+    // Responsive sizing
+    final double horizontalPadding = size.width * 0.06; // 6% of width
+    final double titleFontSize = (size.width * 0.07).clamp(24.0, 32.0);
+    final double subtitleFontSize = (size.width * 0.035).clamp(12.0, 16.0);
+    
     // Get templates from registry, excluding 'none' for categories
     final templates = TemplateRegistry.allTemplates.where((t) => t.id != 'none').toList();
-    final categories = ['All', ...templates.map((t) => t.name.split(' ').last)]; // Using last word for short category names
+    final categories = ['All', ...templates.map((t) => t.name.split(' ').last)]; 
 
     // Use shuffled templates for Explore section if available
     final exploreTemplates = _shuffledTemplates.isNotEmpty ? _shuffledTemplates : templates;
@@ -71,35 +85,65 @@ class _HomeScreenState extends State<HomeScreen> {
           // 1. Modern Header with Greeting
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 60, 24, 20),
+              padding: EdgeInsets.fromLTRB(horizontalPadding, 60, horizontalPadding, 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Good Morning,',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: isDark ? Colors.white38 : Colors.black38,
-                          letterSpacing: 0.5,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          height: 40,
+                          width: 40,
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Image.asset(
+                            'assets/images/logo.png',
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) => Icon(
+                              Icons.auto_stories,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                              size: 20,
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Create something.',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          color: isDark ? Colors.white : Colors.black,
-                          letterSpacing: -1,
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _getGreeting(),
+                                style: TextStyle(
+                                  fontSize: subtitleFontSize,
+                                  fontWeight: FontWeight.w500,
+                                  color: isDark ? Colors.white38 : Colors.black38,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Create Story.',
+                                style: TextStyle(
+                                  fontSize: titleFontSize,
+                                  fontWeight: FontWeight.w900,
+                                  color: isDark ? Colors.white : Colors.black,
+                                  letterSpacing: -1,
+                                  height: 1.1,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   Container(
+                    margin: const EdgeInsets.only(bottom: 4),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
@@ -113,7 +157,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         size: 22,
                         color: isDark ? Colors.white70 : Colors.black87,
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -301,7 +350,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Stories Grid
           Consumer<StoryService>(
             builder: (context, storyService, child) {
-              final stories = storyService.stories;
+              final stories = storyService.stories.reversed.toList();
 
               if (stories.isEmpty) {
                 return SliverFillRemaining(

@@ -28,39 +28,15 @@ class _MusicStepState extends State<MusicStep> {
   String? _customMusicName;
   late double _volume = widget.initialVolume ?? 100.0;
   
-  final List<Map<String, dynamic>> _musicOptions = [
-    {
-      'id': 'summer_vibe',
-      'name': 'Summer Vibe',
-      'genre': 'Uplifting',
-      'path': 'assets/music/summer.mp3',
-    },
-    {
-      'id': 'lofi_study',
-      'name': 'Lofi Study',
-      'genre': 'Chill',
-      'path': 'assets/music/lofi.mp3',
-    },
-    {
-      'id': 'adventure',
-      'name': 'Adventure',
-      'genre': 'Cinematic',
-      'path': 'assets/music/adventure.mp3',
-    },
-  ];
 
   @override
   void initState() {
     super.initState();
     if (_selectedMusic != null) {
-      // Check if it's one of the presets
-      final preset = _musicOptions.any((m) => m['path'] == _selectedMusic);
-      if (!preset) {
-        if (_selectedMusic!.contains('recording')) {
-          _customMusicName = 'My Recording';
-        } else {
-          _customMusicName = _selectedMusic!.split('/').last;
-        }
+      if (_selectedMusic!.contains('recording')) {
+        _customMusicName = 'My Recording';
+      } else {
+        _customMusicName = _selectedMusic!.split('/').last;
       }
     }
   }
@@ -179,405 +155,259 @@ class _MusicStepState extends State<MusicStep> {
     }
   }
 
+  Widget _buildActionCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required bool isSelected,
+    bool isRecording = false,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOutQuart,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          color: isRecording 
+              ? Colors.red.withValues(alpha: 0.1)
+              : (isSelected 
+                  ? theme.colorScheme.primary.withValues(alpha: 0.1) 
+                  : (isDark ? Colors.white.withValues(alpha: 0.05) : theme.colorScheme.surface)),
+          border: Border.all(
+            color: isRecording 
+                ? Colors.red.withValues(alpha: 0.5)
+                : (isSelected 
+                    ? theme.colorScheme.primary 
+                    : (isDark ? Colors.white.withValues(alpha: 0.15) : theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
+            width: isSelected || isRecording ? 2 : 1,
+          ),
+          boxShadow: isSelected || isRecording
+              ? [
+                  BoxShadow(
+                    color: (isRecording ? Colors.red : theme.colorScheme.primary).withValues(alpha: 0.1),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  )
+                ]
+              : null,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isRecording 
+                    ? Colors.red 
+                    : (isSelected 
+                        ? theme.colorScheme.primary 
+                        : (isDark ? Colors.white.withValues(alpha: 0.1) : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5))),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon,
+                size: 24,
+                color: isRecording 
+                    ? Colors.white 
+                    : (isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.primary),
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                      letterSpacing: -0.3,
+                      color: isRecording 
+                          ? Colors.red 
+                          : (isSelected ? theme.colorScheme.primary : (isDark ? Colors.white : Colors.black)),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                      color: isRecording 
+                          ? Colors.red.withValues(alpha: 0.7) 
+                          : (isSelected ? theme.colorScheme.primary.withValues(alpha: 0.7) : (isDark ? Colors.white38 : Colors.black38)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (isSelected && !isRecording)
+              Icon(
+                Icons.check_circle_rounded,
+                color: theme.colorScheme.primary,
+                size: 24,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.06, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Soundtrack',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Choose a track to set the mood for your story.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                
-                // Music Selection Grid
-                Expanded(
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 1.2,
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Soundtrack',
+                    style: TextStyle(
+                      fontSize: (size.width * 0.08).clamp(24.0, 32.0),
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -1,
+                      color: isDark ? Colors.white : Colors.black,
+                      height: 1.1,
                     ),
-                    itemCount: _musicOptions.length + 2,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        final isPicked = _customMusicName != null && _selectedMusic != null && !_selectedMusic!.startsWith('assets/') && _customMusicName != 'My Recording';
-                        final isSelected = isPicked;
-                        
-                        return GestureDetector(
-                          onTap: _pickMusic,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isSelected
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-                                width: isSelected ? 2 : 1,
-                              ),
-                              color: isSelected
-                                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-                                  : theme.colorScheme.surface,
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(20),
-                              child: Stack(
-                                children: [
-                                  if (!isSelected)
-                                    CustomPaint(
-                                      painter: _DashedBorderPainter(
-                                        color: theme.colorScheme.outlineVariant,
-                                        radius: 20,
-                                      ),
-                                      child: Container(),
-                                    ),
-                                  
-                                  Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? theme.colorScheme.primary
-                                                : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Icon(
-                                            isSelected ? Icons.file_present_rounded : Icons.add_rounded,
-                                            size: 18,
-                                            color: isSelected
-                                                ? theme.colorScheme.onPrimary
-                                                : theme.colorScheme.primary,
-                                          ),
-                                        ),
-                                        Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              isSelected ? _customMusicName! : 'Pick from device',
-                                              style: theme.textTheme.labelLarge?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: isSelected
-                                                    ? theme.colorScheme.primary
-                                                    : theme.colorScheme.onSurface,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              isSelected ? 'LOCAL FILE' : 'YOUR OWN MUSIC',
-                                              style: theme.textTheme.bodySmall?.copyWith(
-                                                color: isSelected
-                                                    ? theme.colorScheme.primary.withValues(alpha: 0.7)
-                                                    : theme.colorScheme.onSurfaceVariant,
-                                                fontSize: 8,
-                                                fontWeight: FontWeight.w900,
-                                                letterSpacing: 1,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    Positioned(
-                                      top: 8,
-                                      right: 8,
-                                      child: Icon(
-                                        Icons.check_circle_rounded,
-                                        color: theme.colorScheme.primary,
-                                        size: 20,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Add a layer of emotion to your story with a custom track or voice recording.',
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.5,
+                      color: isDark ? Colors.white38 : Colors.black38,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  
+                  // Primary Actions
+                  _buildActionCard(
+                    context,
+                    title: _customMusicName != null && _selectedMusic != null && !_selectedMusic!.startsWith('assets/') && _customMusicName != 'My Recording' 
+                        ? _customMusicName! 
+                        : 'Import Audio',
+                    subtitle: 'PICK FROM YOUR DEVICE',
+                    icon: Icons.library_music_rounded,
+                    isSelected: _customMusicName != null && _selectedMusic != null && !_selectedMusic!.startsWith('assets/') && _customMusicName != 'My Recording',
+                    onTap: _pickMusic,
+                  ),
+                  const SizedBox(height: 16),
+                  _buildActionCard(
+                    context,
+                    title: _isRecording 
+                        ? 'Recording... ${_formatDuration(_recordDuration)}' 
+                        : (_customMusicName == 'My Recording' ? _customMusicName! : 'Voice Memo'),
+                    subtitle: _isRecording ? 'TAP TO STOP' : 'USE MICROPHONE',
+                    icon: _isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+                    isSelected: _customMusicName == 'My Recording',
+                    isRecording: _isRecording,
+                    onTap: () {
+                      if (_isRecording) {
+                        _stopRecording();
+                      } else {
+                        _startRecording();
                       }
-
-                      if (index == 1) {
-                        final isRecorded = _customMusicName == 'My Recording';
-                        final isSelected = isRecorded;
-                        
-                        return GestureDetector(
-                          onTap: () {
-                            if (_isRecording) {
-                              _stopRecording();
-                            } else {
-                              _startRecording();
-                            }
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: _isRecording 
-                                    ? Colors.red 
-                                    : (isSelected ? theme.colorScheme.primary : theme.colorScheme.outlineVariant.withValues(alpha: 0.5)),
-                                width: (isSelected || _isRecording) ? 2 : 1,
-                              ),
-                              color: _isRecording 
-                                  ? Colors.red.withValues(alpha: 0.1) 
-                                  : (isSelected ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2) : theme.colorScheme.surface),
-                            ),
-                            child: Stack(
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color: _isRecording 
-                                              ? Colors.red 
-                                              : (isSelected ? theme.colorScheme.primary : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          _isRecording ? Icons.stop_rounded : Icons.mic_rounded,
-                                          size: 18,
-                                          color: (_isRecording || isSelected)
-                                              ? Colors.white
-                                              : theme.colorScheme.primary,
-                                        ),
-                                      ),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            _isRecording 
-                                                ? 'Recording... ${_formatDuration(_recordDuration)}' 
-                                                : (isSelected ? _customMusicName! : 'Record Voice'),
-                                            style: theme.textTheme.labelLarge?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                              color: _isRecording 
-                                                  ? Colors.red 
-                                                  : (isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface),
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            _isRecording ? 'TAP TO STOP' : 'USE MICROPHONE',
-                                            style: theme.textTheme.bodySmall?.copyWith(
-                                              color: _isRecording 
-                                                  ? Colors.red.withValues(alpha: 0.7) 
-                                                  : (isSelected ? theme.colorScheme.primary.withValues(alpha: 0.7) : theme.colorScheme.onSurfaceVariant),
-                                              fontSize: 8,
-                                              fontWeight: FontWeight.w900,
-                                              letterSpacing: 1,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                if (isSelected && !_isRecording)
-                                  Positioned(
-                                    top: 8,
-                                    right: 8,
-                                    child: Icon(
-                                      Icons.check_circle_rounded,
-                                      color: theme.colorScheme.primary,
-                                      size: 20,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-
-                      final music = _musicOptions[index - 2];
-                      final isSelected = _selectedMusic == music['path'] && _customMusicName == null;
-                      
-                      return GestureDetector(
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          setState(() {
-                            _selectedMusic = music['path'];
-                            // Clear custom music name if an asset is selected
-                            if (music['path'].startsWith('assets/')) {
-                              _customMusicName = null;
-                            }
-                          });
-                        },
-                        child: AnimatedScale(
-                          duration: const Duration(milliseconds: 200),
-                          scale: isSelected ? 1.02 : 1.0,
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isSelected
-                                    ? theme.colorScheme.primary
-                                    : theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-                                width: isSelected ? 2 : 1,
-                              ),
-                              color: isSelected
-                                  ? theme.colorScheme.primaryContainer.withValues(alpha: 0.2)
-                                  : theme.colorScheme.surface,
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                                        blurRadius: 10,
-                                        offset: const Offset(0, 4),
-                                      )
-                                    ]
-                                  : null,
-                            ),
-                            padding: const EdgeInsets.all(16),
-                            child: Stack(
-                              children: [
-                                if (isSelected)
-                                  Positioned(
-                                    top: -4,
-                                    right: -4,
-                                    child: Icon(
-                                      Icons.check_circle_rounded,
-                                      color: theme.colorScheme.primary,
-                                      size: 20,
-                                    ),
-                                  ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: isSelected
-                                            ? theme.colorScheme.primary
-                                            : theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        isSelected ? Icons.play_arrow_rounded : Icons.music_note_rounded,
-                                        size: 18,
-                                        color: isSelected
-                                            ? theme.colorScheme.onPrimary
-                                            : theme.colorScheme.primary,
-                                      ),
-                                    ),
-                                    Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          music['name'],
-                                          style: theme.textTheme.labelLarge?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: isSelected
-                                                ? theme.colorScheme.primary
-                                                : theme.colorScheme.onSurface,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          music['genre'].toUpperCase(),
-                                          style: theme.textTheme.bodySmall?.copyWith(
-                                            color: isSelected
-                                                ? theme.colorScheme.primary.withValues(alpha: 0.7)
-                                                : theme.colorScheme.onSurfaceVariant,
-                                            fontSize: 8,
-                                            fontWeight: FontWeight.w900,
-                                            letterSpacing: 1,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
                     },
                   ),
-                ),
-              ],
+                  
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
           
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           
           // Volume Control
           if (_selectedMusic != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 24),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.volume_up, size: 20, color: theme.colorScheme.primary),
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.volume_up_rounded, size: 16, color: theme.colorScheme.primary),
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Volume',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
+                          'VOLUME',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.5,
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),
                       Text(
                         '${_volume.round()}%',
-                        style: theme.textTheme.labelMedium?.copyWith(
+                        style: theme.textTheme.titleMedium?.copyWith(
                           color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Slider(
-                    value: _volume,
-                    min: 0,
-                    max: 100,
-                    divisions: 10,
-                    activeColor: theme.colorScheme.primary,
-                    inactiveColor: theme.colorScheme.primaryContainer,
-                    onChanged: (value) {
-                      setState(() {
-                        _volume = value;
-                      });
-                    },
+                  const SizedBox(height: 12),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      trackHeight: 8,
+                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10, elevation: 2),
+                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
+                      activeTrackColor: theme.colorScheme.primary,
+                      inactiveTrackColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      thumbColor: theme.colorScheme.primary,
+                    ),
+                    child: Slider(
+                      value: _volume,
+                      min: 0,
+                      max: 100,
+                      divisions: 10,
+                      onChanged: (value) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _volume = value);
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -586,87 +416,46 @@ class _MusicStepState extends State<MusicStep> {
           // Navigation Buttons
           Row(
             children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: widget.onBack,
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: Text(
-                    'Back',
-                    style: TextStyle(
-                      color: theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              IconButton.filledTonal(
+                onPressed: widget.onBack,
+                style: IconButton.styleFrom(
+                  padding: const EdgeInsets.all(20),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
+                icon: const Icon(Icons.arrow_back_rounded),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
-                flex: 2,
                 child: ElevatedButton(
                   onPressed: () {
+                    HapticFeedback.mediumImpact();
                     widget.onNext({
                       'music': _selectedMusic,
                       'volume': _volume,
                     });
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: isDark ? Colors.white : Colors.black,
+                    foregroundColor: isDark ? Colors.black : Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     elevation: 0,
                   ),
-                  child: const Text('Continue'),
+                  child: Text(
+                    _selectedMusic == null ? 'SKIP & CONTINUE' : 'CONTINUE',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1,
+                      fontSize: 14,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
+          SizedBox(height: MediaQuery.paddingOf(context).bottom + 12),
         ],
       ),
     );
   }
-}
-
-class _DashedBorderPainter extends CustomPainter {
-  final Color color;
-  final double radius;
-
-  _DashedBorderPainter({required this.color, required this.radius});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-
-    final path = Path()
-      ..addRRect(RRect.fromRectAndRadius(
-        Rect.fromLTWH(0.5, 0.5, size.width - 1, size.height - 1),
-        Radius.circular(radius),
-      ));
-
-    const dashWidth = 5.0;
-    const dashSpace = 3.0;
-    var distance = 0.0;
-    final dashPath = Path();
-
-    for (final metric in path.computeMetrics()) {
-      while (distance < metric.length) {
-        dashPath.addPath(
-          metric.extractPath(distance, distance + dashWidth),
-          Offset.zero,
-        );
-        distance += dashWidth + dashSpace;
-      }
-      distance = 0.0;
-    }
-
-    canvas.drawPath(dashPath, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

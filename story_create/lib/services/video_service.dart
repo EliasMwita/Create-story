@@ -16,11 +16,12 @@ class VideoService {
   
   Future<String?> generateStoryVideo(StoryModel story) async {
     try {
-      final tempDir = await getTemporaryDirectory();
-      final outputPath = '${tempDir.path}/story_${story.id}.mp4';
+      final appDir = await getApplicationDocumentsDirectory();
+      final outputPath = '${appDir.path}/story_${story.id}.mp4';
       
+      final tempDir = await getTemporaryDirectory();
       // Create temporary directory for intermediate files
-      final framesDir = '${tempDir.path}/frames';
+      final framesDir = '${tempDir.path}/frames_${story.id}';
       await Directory(framesDir).create(recursive: true);
       
       // Prepare FFmpeg command

@@ -15,33 +15,40 @@ class TemplateCategoryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
     final template = TemplateRegistry.getTemplate(templateId);
+    
+    // Responsive sizing
+    final double horizontalPadding = size.width * 0.06;
+    final double cardHeight = (size.height * 0.55).clamp(380.0, 500.0);
+    final double titleFontSize = (size.width * 0.08).clamp(28.0, 36.0);
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        centerTitle: true,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, 
-            color: isDark ? Colors.white : Colors.black),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          color: isDark ? Colors.white : Colors.black,
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           categoryName.toUpperCase(),
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.w900,
-            letterSpacing: 2,
-            fontSize: 18,
-            color: isDark ? Colors.white : Colors.black,
+            letterSpacing: 3,
+            fontSize: 14,
           ),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+        physics: const BouncingScrollPhysics(),
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -49,7 +56,8 @@ class TemplateCategoryScreen extends StatelessWidget {
               'Featured Style',
               style: TextStyle(
                 fontSize: 24,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
                 color: isDark ? Colors.white : Colors.black,
               ),
             ),
@@ -57,8 +65,9 @@ class TemplateCategoryScreen extends StatelessWidget {
             Text(
               'Start creating with our hand-crafted ${categoryName.toLowerCase()} template.',
               style: TextStyle(
-                fontSize: 16,
-                color: isDark ? Colors.white70 : Colors.black54,
+                fontSize: 15,
+                height: 1.5,
+                color: isDark ? Colors.white38 : Colors.black38,
               ),
             ),
             const SizedBox(height: 32),
@@ -76,7 +85,7 @@ class TemplateCategoryScreen extends StatelessWidget {
               child: Hero(
                 tag: 'template_$templateId',
                 child: Container(
-                  height: 450,
+                  height: cardHeight,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(32),
@@ -88,8 +97,8 @@ class TemplateCategoryScreen extends StatelessWidget {
                     boxShadow: [
                       BoxShadow(
                         color: template.colors.first.withValues(alpha: 0.3),
-                        blurRadius: 30,
-                        offset: const Offset(0, 15),
+                        blurRadius: 40,
+                        offset: const Offset(0, 20),
                       ),
                     ],
                   ),
@@ -97,11 +106,11 @@ class TemplateCategoryScreen extends StatelessWidget {
                     children: [
                       // Background Icon
                       Positioned(
-                        right: -30,
-                        bottom: -30,
+                        right: -40,
+                        bottom: -40,
                         child: Icon(
                           template.icon,
-                          size: 250,
+                          size: size.width * 0.6,
                           color: template.textColor.withValues(alpha: 0.05),
                         ),
                       ),
@@ -114,15 +123,16 @@ class TemplateCategoryScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                               decoration: BoxDecoration(
                                 color: template.textColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: template.textColor.withValues(alpha: 0.1)),
                               ),
                               child: Text(
                                 template.tag,
                                 style: TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 11,
                                   fontWeight: FontWeight.w900,
                                   color: template.textColor,
                                   letterSpacing: 2,
@@ -133,27 +143,37 @@ class TemplateCategoryScreen extends StatelessWidget {
                             Text(
                               template.name,
                               style: TextStyle(
-                                fontSize: 32,
+                                fontSize: titleFontSize,
                                 fontWeight: FontWeight.w900,
                                 color: template.textColor,
-                                height: 1.1,
+                                height: 1.0,
+                                letterSpacing: -1,
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            Row(
-                              children: [
-                                Icon(Icons.flash_on_rounded, 
-                                  size: 16, color: template.textColor.withValues(alpha: 0.7)),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'PRO TEMPLATE',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: template.textColor.withValues(alpha: 0.7),
+                            const SizedBox(height: 16),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: template.textColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.bolt_rounded, 
+                                    size: 14, color: template.textColor),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'PRO STYLE',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                      color: template.textColor,
+                                      letterSpacing: 1,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -164,11 +184,18 @@ class TemplateCategoryScreen extends StatelessWidget {
                         right: 32,
                         child: Container(
                           padding: const EdgeInsets.all(16),
-                          decoration: const BoxDecoration(
+                          decoration: BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          child: const Icon(Icons.arrow_forward_rounded, color: Colors.black),
+                          child: const Icon(Icons.add_rounded, color: Colors.black, size: 24),
                         ),
                       ),
                     ],
@@ -176,19 +203,21 @@ class TemplateCategoryScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 48),
             Text(
-              'Template Details',
+              'Style Highlights',
               style: TextStyle(
                 fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
                 color: isDark ? Colors.white : Colors.black,
               ),
             ),
-            const SizedBox(height: 16),
-            _buildDetailItem(context, Icons.photo_library_rounded, 'Multi-media support', 'Combine photos and videos seamlessly.'),
-            _buildDetailItem(context, Icons.auto_awesome_rounded, 'Smart animations', 'Auto-generated transitions based on style.'),
-            _buildDetailItem(context, Icons.music_note_rounded, 'Curated audio', 'Pre-selected music that matches the vibe.'),
+            const SizedBox(height: 24),
+            _buildDetailItem(context, Icons.auto_awesome_mosaic_rounded, 'Seamless Layouts', 'Automatically adapts to your media aspect ratio.'),
+            _buildDetailItem(context, Icons.auto_awesome_rounded, 'Smart Motion', 'Kinetic typography and fluid transitions.'),
+            _buildDetailItem(context, Icons.volume_up_rounded, 'Immersive Audio', 'Audio normalization and vibe-matched soundtracks.'),
+            const SizedBox(height: 40),
           ],
         ),
       ),

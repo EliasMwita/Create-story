@@ -80,9 +80,14 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final totalSteps = _stepTitles.length;
+    
+    // Responsive sizing
+    final double horizontalPadding = size.width * 0.06;
+    final double titleFontSize = (size.width * 0.055).clamp(20.0, 26.0);
 
     return Scaffold(
       backgroundColor: isDark ? Colors.black : const Color(0xFFF8F8F8),
@@ -100,7 +105,7 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
           style: TextStyle(
             fontWeight: FontWeight.w900,
             letterSpacing: 4,
-            fontSize: 14,
+            fontSize: 12,
             color: isDark ? Colors.white : Colors.black,
           ),
         ),
@@ -114,17 +119,17 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
             builder: (context, value, child) {
               return LinearProgressIndicator(
                 value: value,
-                backgroundColor: isDark ? Colors.white10 : Colors.black12,
+                backgroundColor: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
                 valueColor: AlwaysStoppedAnimation(
                     isDark ? Colors.white : Colors.black),
-                minHeight: 3,
+                minHeight: 2,
               );
             },
           ),
 
           // 2. Animated Header Information
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 25, 24, 15),
+            padding: EdgeInsets.fromLTRB(horizontalPadding, 24, horizontalPadding, 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -132,6 +137,18 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 400),
+                    transitionBuilder: (child, animation) {
+                      return FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.1),
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        ),
+                      );
+                    },
                     child: Column(
                       key: ValueKey<int>(_currentStep),
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,18 +157,19 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
                           'STEP ${_currentStep + 1} OF $totalSteps',
                           style: TextStyle(
                             color: isDark ? Colors.white38 : Colors.black38,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w900,
                             fontSize: 10,
-                            letterSpacing: 1.2,
+                            letterSpacing: 1.5,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           _stepTitles[_currentStep],
-                          style: const TextStyle(
-                            fontSize: 22,
+                          style: TextStyle(
+                            fontSize: titleFontSize,
                             fontWeight: FontWeight.w900,
                             letterSpacing: -0.5,
+                            height: 1.1,
                           ),
                         ),
                       ],
@@ -160,16 +178,23 @@ class _CreateStoryScreenState extends State<CreateStoryScreen> {
                 ),
                 // Percent Circle
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  height: 44,
+                  width: 44,
+                  alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                        color: isDark ? Colors.white10 : Colors.black),
+                        color: isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.05),
+                        width: 1.5,
+                    ),
                   ),
                   child: Text(
                     '${((_currentStep + 1) / totalSteps * 100).toInt()}%',
-                    style: const TextStyle(
-                        fontSize: 11, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 11, 
+                      fontWeight: FontWeight.w900,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
                   ),
                 ),
               ],

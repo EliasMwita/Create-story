@@ -17,10 +17,10 @@ class TemplatePreviewCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 150,
+        width: 160,
         margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(32),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -28,49 +28,49 @@ class TemplatePreviewCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: template.colors.first.withValues(alpha: 0.15),
-              blurRadius: 12,
-              offset: const Offset(0, 8),
+              color: template.colors.first.withValues(alpha: 0.2),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(32),
           child: Stack(
             children: [
               // Template Overlay Layer
-              TemplateRegistry.getOverlay(template.id, borderRadius: 28),
+              TemplateRegistry.getOverlay(template.id, borderRadius: 32),
               
               // Icon Accent
               Positioned(
-                right: -15,
-                bottom: -15,
+                right: -20,
+                bottom: -20,
                 child: Icon(
                   template.icon,
-                  size: 80,
-                  color: template.textColor.withValues(alpha: 0.08),
+                  size: 100,
+                  color: template.textColor.withValues(alpha: 0.1),
                 ),
               ),
               
               // Content
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: template.textColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+                        color: template.textColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
-                        template.tag,
+                        template.tag.toUpperCase(),
                         style: TextStyle(
-                          fontSize: 8,
+                          fontSize: 9,
                           fontWeight: FontWeight.w900,
                           color: template.textColor,
-                          letterSpacing: 1.1,
+                          letterSpacing: 1.2,
                         ),
                       ),
                     ),
@@ -78,21 +78,32 @@ class TemplatePreviewCard extends StatelessWidget {
                     Text(
                       template.name,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.w900,
                         color: template.textColor,
-                        height: 1.1,
+                        height: 1,
+                        letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'USE STYLE',
-                      style: TextStyle(
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
-                        color: template.textColor.withValues(alpha: 0.6),
-                        letterSpacing: 1,
-                      ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Text(
+                          'USE STYLE',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            color: template.textColor.withValues(alpha: 0.6),
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.arrow_forward_rounded,
+                          size: 10,
+                          color: template.textColor.withValues(alpha: 0.6),
+                        ),
+                      ],
                     ),
                   ],
                 ),
