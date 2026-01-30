@@ -106,7 +106,7 @@ class FilmTemplate extends StatelessWidget {
         2,
         (_) => Container(
           height: 36,
-          color: Colors.black.withOpacity(0.9),
+          color: Colors.black.withValues(alpha: 0.9),
           child: LayoutBuilder(
             builder: (context, constraints) {
               final count = (constraints.maxWidth / 22).floor();
@@ -146,7 +146,7 @@ class _GlassPanel extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.35),
+            color: Colors.black.withValues(alpha: 0.35),
             border: Border.all(color: Colors.white10),
           ),
           child: child,
@@ -169,7 +169,7 @@ class _ScanlinePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black.withOpacity(0.06)
+      ..color = Colors.black.withValues(alpha: 0.06)
       ..strokeWidth = 1;
     for (double y = 0; y < size.height; y += 3) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
@@ -212,7 +212,7 @@ class CornerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white.withOpacity(0.5)
+      ..color = Colors.white.withValues(alpha: 0.5)
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
 
@@ -307,7 +307,7 @@ class _AudioMeter extends StatelessWidget {
           height: 8,
           margin: const EdgeInsets.symmetric(horizontal: 1),
           decoration: BoxDecoration(
-            color: color.withOpacity(index % 3 == 0 ? 0.8 : 0.3),
+            color: color.withValues(alpha: index % 3 == 0 ? 0.8 : 0.3),
             borderRadius: BorderRadius.circular(0.5),
           ),
         );
@@ -327,7 +327,7 @@ class BatteryIndicator extends StatelessWidget {
         Text(
           'STBY',
           style: TextStyle(
-            color: Colors.greenAccent.withOpacity(0.8),
+            color: Colors.greenAccent.withValues(alpha: 0.8),
             fontSize: 10,
             fontWeight: FontWeight.bold,
           ),
@@ -406,7 +406,7 @@ class TimeCodeWidget extends StatelessWidget {
         Text(
           'A:012 C:004',
           style: TextStyle(
-            color: Colors.white.withOpacity(0.4),
+            color: Colors.white.withValues(alpha: 0.4),
             fontSize: 9,
             letterSpacing: 1,
           ),

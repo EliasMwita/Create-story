@@ -50,7 +50,7 @@ class FlowerFallTemplate extends StatelessWidget {
                 center: Alignment.center,
                 radius: 0.8,
                 colors: [
-                  Colors.white.withOpacity(0.1),
+                  Colors.white.withValues(alpha: 0.1),
                   Colors.transparent,
                 ],
               ),
@@ -81,7 +81,7 @@ class _PatternPainter extends CustomPainter {
         if (random.nextDouble() < 0.3) {
           final radius = random.nextDouble() * 3 + 1;
           final circlePaint = Paint()
-            ..color = Colors.white.withOpacity(0.1)
+            ..color = Colors.white.withValues(alpha: 0.1)
             ..style = PaintingStyle.fill;
           
           canvas.drawCircle(

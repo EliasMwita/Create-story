@@ -36,4 +36,9 @@ class StoryService extends ChangeNotifier {
       return null;
     }
   }
+
+  /// Explicitly notify listeners of changes
+  void refresh() {
+    notifyListeners();
+  }
 }

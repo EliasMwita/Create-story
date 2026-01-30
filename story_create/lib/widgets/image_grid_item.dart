@@ -124,7 +124,7 @@ class ImageGridItem extends StatelessWidget {
         width: 24,
         height: 24,
         decoration: BoxDecoration(
-          color: enabled ? Colors.black.withOpacity(0.5) : Colors.transparent,
+          color: enabled ? Colors.black.withValues(alpha: 0.5) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(

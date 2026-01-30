@@ -31,9 +31,9 @@ class RetroTemplate extends StatelessWidget {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  const Color(0xFF0F0C29).withOpacity(0.2),
-                  const Color(0xFF302B63).withOpacity(0.2),
-                  const Color(0xFF24243E).withOpacity(0.2),
+                  const Color(0xFF0F0C29).withValues(alpha: 0.2),
+                  const Color(0xFF302B63).withValues(alpha: 0.2),
+                  const Color(0xFF24243E).withValues(alpha: 0.2),
                 ],
                 stops: const [0.0, 0.5, 1.0],
               ),
@@ -75,7 +75,7 @@ class RetroTemplate extends StatelessWidget {
                 radius: 0.8,
                 colors: [
                   Colors.transparent,
-                  Colors.black.withOpacity(0.3),
+                  Colors.black.withValues(alpha: 0.3),
                 ],
                 stops: const [0.5, 1.0],
               ),
@@ -95,7 +95,7 @@ class RetroTemplate extends StatelessWidget {
                 begin: Alignment.centerRight,
                 end: Alignment.centerLeft,
                 colors: [
-                  const Color(0xFFFF0099).withOpacity(0.3),
+                  const Color(0xFFFF0099).withValues(alpha: 0.3),
                   Colors.transparent,
                 ],
               ),
@@ -115,7 +115,7 @@ class RetroTemplate extends StatelessWidget {
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
                 colors: [
-                  const Color(0xFF00FFCC).withOpacity(0.3),
+                  const Color(0xFF00FFCC).withValues(alpha: 0.3),
                   Colors.transparent,
                 ],
               ),
@@ -185,8 +185,8 @@ class StaticNoisePainter extends CustomPainter {
       final sizeDot = random.nextDouble() * 2 + 0.5;
 
       paint.color = random.nextBool()
-          ? const Color(0xFFFF0099).withOpacity(alpha)
-          : const Color(0xFF00FFCC).withOpacity(alpha);
+          ? const Color(0xFFFF0099).withValues(alpha: alpha)
+          : const Color(0xFF00FFCC).withValues(alpha: alpha);
 
       canvas.drawCircle(Offset(x, y), sizeDot, paint);
     }
@@ -197,7 +197,7 @@ class StaticNoisePainter extends CustomPainter {
       final height = random.nextDouble() * 3 + 1;
       final alpha = random.nextDouble() * 0.2 + 0.1;
 
-      paint.color = Colors.white.withOpacity(alpha);
+      paint.color = Colors.white.withValues(alpha: alpha);
 
       canvas.drawRect(
         Rect.fromLTWH(0, y, size.width, height),
@@ -226,7 +226,7 @@ class ScanLinesPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black.withOpacity(0.15)
+      ..color = Colors.black.withValues(alpha: 0.15)
       ..style = PaintingStyle.fill;
 
     const lineHeight = 2.0;
@@ -241,7 +241,7 @@ class ScanLinesPainter extends CustomPainter {
 
     // Draw CRT curvature effect
     final borderPaint = Paint()
-      ..color = Colors.black.withOpacity(0.3)
+      ..color = Colors.black.withValues(alpha: 0.3)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
@@ -303,7 +303,7 @@ class RetroGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = const Color(0xFF00FFCC).withOpacity(0.1)
+      ..color = const Color(0xFF00FFCC).withValues(alpha: 0.1)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
 
@@ -331,7 +331,7 @@ class RetroGridPainter extends CustomPainter {
 
     // Draw grid intersections
     final pointPaint = Paint()
-      ..color = const Color(0xFFFF0099).withOpacity(0.3)
+      ..color = const Color(0xFFFF0099).withValues(alpha: 0.3)
       ..style = PaintingStyle.fill;
 
     for (double x = gridSize / 2; x < size.width; x += gridSize) {
@@ -465,7 +465,7 @@ class VHSTapePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     for (final tape in tapes) {
       final paint = Paint()
-        ..color = tape.color.withOpacity(0.7)
+        ..color = tape.color.withValues(alpha: 0.7)
         ..style = PaintingStyle.fill;
 
       final centerX = tape.x * size.width;
@@ -481,7 +481,7 @@ class VHSTapePainter extends CustomPainter {
 
       // Draw trail effect
       final trailPaint = Paint()
-        ..color = tape.color.withOpacity(0.2)
+        ..color = tape.color.withValues(alpha: 0.2)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
 
       for (int i = 1; i <= 3; i++) {
@@ -520,7 +520,7 @@ class VHSTapePainter extends CustomPainter {
 
     // Draw tape window
     final windowPaint = Paint()
-      ..color = Colors.black.withOpacity(0.5)
+      ..color = Colors.black.withValues(alpha: 0.5)
       ..style = PaintingStyle.fill;
 
     canvas.drawRect(
@@ -534,7 +534,7 @@ class VHSTapePainter extends CustomPainter {
 
     // Draw label
     final labelPaint = Paint()
-      ..color = Colors.white.withOpacity(0.8)
+      ..color = Colors.white.withValues(alpha: 0.8)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
@@ -657,8 +657,8 @@ class GlitchPainter extends CustomPainter {
         
         final glitchPaint = Paint()
           ..color = i.isEven 
-              ? const Color(0xFFFF0099).withOpacity(0.3)
-              : const Color(0xFF00FFCC).withOpacity(0.3)
+              ? const Color(0xFFFF0099).withValues(alpha: 0.3)
+              : const Color(0xFF00FFCC).withValues(alpha: 0.3)
           ..style = PaintingStyle.fill;
         
         canvas.drawRect(
@@ -674,7 +674,7 @@ class GlitchPainter extends CustomPainter {
         final offset = random.nextDouble() * 30 - 15;
         
         final slicePaint = Paint()
-          ..color = Colors.white.withOpacity(0.2)
+          ..color = Colors.white.withValues(alpha: 0.2)
           ..style = PaintingStyle.fill;
         
         canvas.drawRect(

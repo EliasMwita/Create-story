@@ -84,7 +84,7 @@ class _PreviewStepState extends State<PreviewStep> {
         // Use direct save since it's a HiveObject and was already added to the box
         await story.save();
         // Notify listeners so UI (like HomeScreen) knows the video is ready
-        storyService.notifyListeners(); 
+        storyService.refresh(); 
         _videoCompleter?.complete(videoPath);
       } else {
         _videoCompleter?.complete(null);
