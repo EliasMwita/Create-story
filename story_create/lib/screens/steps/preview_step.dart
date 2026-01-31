@@ -10,6 +10,7 @@ import 'package:story_create/services/story_service.dart';
 import 'package:story_create/services/video_service.dart';
 import 'package:story_create/widgets/story_reel_player.dart';
 import 'package:story_create/widgets/templates/template_registry.dart';
+import 'package:story_create/services/ad_service.dart';
 
 class PreviewStep extends StatefulWidget {
   final Map<String, dynamic> storyData;
@@ -36,6 +37,7 @@ class _PreviewStepState extends State<PreviewStep> {
   void initState() {
     super.initState();
     _previewId = DateTime.now().millisecondsSinceEpoch.toString();
+    AdService.loadInterstitialAd();
   }
 
   @override
@@ -255,8 +257,10 @@ class _PreviewStepState extends State<PreviewStep> {
                         Expanded(
                           child: TextButton(
                             onPressed: isBusy ? null : () {
-                              Navigator.pop(context);
-                              widget.onComplete();
+                              AdService.showInterstitialAd(() {
+                                Navigator.pop(context);
+                                widget.onComplete();
+                              });
                             },
                             child: Text('DONE', style: TextStyle(color: isDark ? Colors.white70 : Colors.black54, fontWeight: FontWeight.bold)),
                           ),

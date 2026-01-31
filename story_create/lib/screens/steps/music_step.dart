@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:story_create/widgets/banner_ad_widget.dart';
 import 'dart:async';
 
 class MusicStep extends StatefulWidget {
@@ -412,6 +413,9 @@ class _MusicStepState extends State<MusicStep> {
                 ],
               ),
             ),
+          
+          const Center(child: BannerAdWidget()),
+          const SizedBox(height: 16),
           
           // Navigation Buttons
           Row(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:story_create/widgets/banner_ad_widget.dart';
 
 class PlaceStep extends StatefulWidget {
   final String? initialPlace;
@@ -208,7 +209,8 @@ class _PlaceStepState extends State<PlaceStep> {
             ),
           ),
           
-          const SizedBox(height: 32),
+          const Center(child: BannerAdWidget()),
+          const SizedBox(height: 16),
           
           // Navigation Buttons
           Row(

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:story_create/services/preferences_service.dart';
 import 'package:story_create/services/story_service.dart';
 import 'package:story_create/utils/colors.dart';
+import 'package:story_create/widgets/banner_ad_widget.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -61,7 +62,10 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {},
           ),
           
-          const SizedBox(height: 40),
+          const SizedBox(height: 32),
+          const Center(child: BannerAdWidget()),
+          const SizedBox(height: 32),
+          
           Center(
             child: Column(
               children: [

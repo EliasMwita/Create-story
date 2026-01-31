@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:story_create/models/mood_model.dart';
 import 'package:story_create/widgets/mood_chip.dart';
+import 'package:story_create/widgets/banner_ad_widget.dart';
 
 class MoodStep extends StatefulWidget {
   final String? initialMood;
@@ -83,7 +84,8 @@ class _MoodStepState extends State<MoodStep> {
             ),
           ),
 
-          const SizedBox(height: 32),
+          const Center(child: BannerAdWidget()),
+          const SizedBox(height: 16),
 
           // Navigation Buttons
           Row(

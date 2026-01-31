@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:story_create/screens/create_story_screen.dart';
 import 'package:story_create/utils/colors.dart';
 import 'package:story_create/widgets/templates/template_registry.dart';
+import 'package:story_create/widgets/banner_ad_widget.dart';
 
 class TemplateCategoryScreen extends StatelessWidget {
   final String categoryName;
@@ -217,6 +218,8 @@ class TemplateCategoryScreen extends StatelessWidget {
             _buildDetailItem(context, Icons.auto_awesome_mosaic_rounded, 'Seamless Layouts', 'Automatically adapts to your media aspect ratio.'),
             _buildDetailItem(context, Icons.auto_awesome_rounded, 'Smart Motion', 'Kinetic typography and fluid transitions.'),
             _buildDetailItem(context, Icons.volume_up_rounded, 'Immersive Audio', 'Audio normalization and vibe-matched soundtracks.'),
+            const SizedBox(height: 32),
+            const Center(child: BannerAdWidget()),
             const SizedBox(height: 40),
           ],
         ),

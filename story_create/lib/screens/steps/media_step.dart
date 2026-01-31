@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:story_create/widgets/image_grid_item.dart';
+import 'package:story_create/widgets/banner_ad_widget.dart';
+import 'package:story_create/services/ad_service.dart';
 
 class MediaStep extends StatefulWidget {
   final List<String> initialImages;
@@ -15,6 +17,13 @@ class MediaStep extends StatefulWidget {
 class _MediaStepState extends State<MediaStep> {
   late final List<String> _images = List.from(widget.initialImages);
   final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    AdService.loadInterstitialAd();
+    AdService.loadRewardedAd();
+  }
 
   Future<void> _pickImageFromCamera() async {
     try {
@@ -155,6 +164,8 @@ class _MediaStepState extends State<MediaStep> {
           ),
 
           const SizedBox(height: 24),
+          const Center(child: BannerAdWidget()),
+          const SizedBox(height: 16),
 
           // Next Button
           SizedBox(
@@ -164,12 +175,14 @@ class _MediaStepState extends State<MediaStep> {
               onPressed: _images.isEmpty
                   ? null
                   : () {
-                      widget.onNext({
-                        'images': _images,
-                        'order': List.generate(
-                          _images.length,
-                          (index) => index,
-                        ),
+                      AdService.showInterstitialAd(() {
+                        widget.onNext({
+                          'images': _images,
+                          'order': List.generate(
+                            _images.length,
+                            (index) => index,
+                          ),
+                        });
                       });
                     },
               style: ElevatedButton.styleFrom(

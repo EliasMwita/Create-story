@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:story_create/widgets/banner_ad_widget.dart';
 
 class TextStep extends StatefulWidget {
   final String? initialTitle;
@@ -153,7 +154,8 @@ class _TextStepState extends State<TextStep> {
             ),
           ),
           
-          const SizedBox(height: 32),
+          const Center(child: BannerAdWidget()),
+          const SizedBox(height: 16),
           
           // Navigation Buttons
           Row(

@@ -10,6 +10,9 @@ import 'package:story_create/widgets/template_preview_card.dart';
 import 'package:story_create/utils/colors.dart';
 import 'package:story_create/widgets/templates/template_registry.dart';
 import 'package:story_create/screens/settings_screen.dart';
+import 'package:story_create/widgets/banner_ad_widget.dart';
+import 'package:story_create/services/ad_service.dart';
+import 'package:story_create/services/preferences_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _initializeTemplates();
     _startShuffleTimer();
+    AdService.loadRewardedAd();
   }
 
   @override
@@ -57,6 +61,86 @@ class _HomeScreenState extends State<HomeScreen> {
     if (hour < 12) return 'Good Morning,';
     if (hour < 17) return 'Good Afternoon,';
     return 'Good Evening,';
+  }
+
+  void _handleCreateStory({String? templateId, bool isBlank = false}) {
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    
+    if (prefs.creationCount < 1) {
+      // First time is free
+      _navigateToEditor(templateId: templateId, isBlank: isBlank);
+    } else {
+      // Second time onwards, show a professional reward dialog
+      _showRewardDialog(templateId: templateId, isBlank: isBlank);
+    }
+  }
+
+  void _navigateToEditor({String? templateId, bool isBlank = false}) {
+    final prefs = Provider.of<PreferencesService>(context, listen: false);
+    prefs.incrementCreationCount();
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => isBlank 
+          ? const CreateStoryScreen(isBlank: true)
+          : CreateStoryScreen(initialTemplateId: templateId),
+      ),
+    );
+  }
+
+  void _showRewardDialog({String? templateId, bool isBlank = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+        title: const Text(
+          'Unlock Editor',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
+        content: const Text(
+          'Watch a short video to support our work and unlock the cinematic story editor.',
+          style: TextStyle(fontSize: 15, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'NOT NOW',
+              style: TextStyle(
+                color: isDark ? Colors.white38 : Colors.black38,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              AdService.showRewardedAd(
+                () => _navigateToEditor(templateId: templateId, isBlank: isBlank),
+                () {
+                  // If ad dismissed without reward, optionally show a message
+                }
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: isDark ? Colors.white : Colors.black,
+              foregroundColor: isDark ? Colors.black : Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text(
+              'WATCH & UNLOCK',
+              style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -245,6 +329,19 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          // Ad Banner Section
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 50),
+                  child: const BannerAdWidget(),
+                ),
+              ),
+            ),
+          ),
+         //end of  Ad Banner Section
 
           SliverToBoxAdapter(
             child: SizedBox(
@@ -259,16 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.only(bottom: 10),
                     child: TemplatePreviewCard(
                       template: template,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CreateStoryScreen(
-                              initialTemplateId: template.id,
-                            ),
-                          ),
-                        );
-                      },
+                      onTap: () => _handleCreateStory(templateId: template.id),
                     ),
                   );
                 },
@@ -281,14 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const CreateStoryScreen(isBlank: true),
-                    ),
-                  );
-                },
+                onTap: () => _handleCreateStory(isBlank: true),
                 borderRadius: BorderRadius.circular(24),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 20),

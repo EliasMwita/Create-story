@@ -12,6 +12,7 @@ import 'package:story_create/utils/music_utils.dart';
 import 'package:story_create/widgets/story_video_player.dart';
 import 'package:story_create/widgets/story_reel_player.dart';
 import 'package:story_create/utils/colors.dart';
+import 'package:story_create/widgets/banner_ad_widget.dart';
 
 class StoryDetailScreen extends StatefulWidget {
   final String storyId;
@@ -377,7 +378,9 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 48),
+                      const SizedBox(height: 32),
+                      const Center(child: BannerAdWidget()),
+                      const SizedBox(height: 32),
                       if (story.imagePaths.length > 1) ...[
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
