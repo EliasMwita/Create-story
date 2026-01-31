@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:gal/gal.dart';
 import 'package:story_create/models/story_model.dart';
 import 'package:story_create/services/story_service.dart';
 import 'package:story_create/services/video_service.dart';
@@ -101,7 +102,7 @@ class _PreviewStepState extends State<PreviewStep> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        bool isSharing = false;
+        bool isBusy = false;
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
@@ -115,7 +116,7 @@ class _PreviewStepState extends State<PreviewStep> {
                     'Your story has been saved! We are processing the cinematic video in the background.',
                     style: TextStyle(color: isDark ? Colors.white70 : Colors.black54),
                   ),
-                  if (isSharing) ...[
+                  if (isBusy) ...[
                     const SizedBox(height: 20),
                     const CircularProgressIndicator(),
                     const SizedBox(height: 12),
@@ -130,8 +131,8 @@ class _PreviewStepState extends State<PreviewStep> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: isSharing ? null : () async {
-                          setDialogState(() => isSharing = true);
+                        onPressed: isBusy ? null : () async {
+                          setDialogState(() => isBusy = true);
                           
                           try {
                             String? videoPath = story.videoOutputPath;
@@ -158,7 +159,7 @@ class _PreviewStepState extends State<PreviewStep> {
                             }
                           } finally {
                             if (context.mounted) {
-                              setDialogState(() => isSharing = false);
+                              setDialogState(() => isBusy = false);
                             }
                           }
                         },
@@ -169,7 +170,61 @@ class _PreviewStepState extends State<PreviewStep> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         child: Text(
-                          isSharing ? 'PROCESSING...' : 'SHARE REEL VIDEO', 
+                          isBusy ? 'PROCESSING...' : 'SHARE REEL VIDEO', 
+                          style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: isBusy ? null : () async {
+                          setDialogState(() => isBusy = true);
+                          
+                          try {
+                            String? videoPath = story.videoOutputPath;
+                            if (videoPath == null && _videoCompleter != null) {
+                              videoPath = await _videoCompleter!.future.timeout(
+                                const Duration(seconds: 45),
+                                onTimeout: () => null,
+                              );
+                            }
+
+                            if (videoPath != null && File(videoPath).existsSync()) {
+                              await Gal.putVideo(videoPath);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Video saved to gallery!')),
+                                );
+                              }
+                            } else {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text('Video is still processing or failed.')),
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error saving video: $e')),
+                              );
+                            }
+                          } finally {
+                            if (context.mounted) {
+                              setDialogState(() => isBusy = false);
+                            }
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blueAccent,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        child: Text(
+                          isBusy ? 'PROCESSING...' : 'SAVE TO GALLERY', 
                           style: const TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
                         ),
                       ),
@@ -179,7 +234,7 @@ class _PreviewStepState extends State<PreviewStep> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: isSharing ? null : () async {
+                            onPressed: isBusy ? null : () async {
                               final files = story.imagePaths.map((path) => XFile(path)).toList();
                               if (files.isNotEmpty) {
                                 await Share.shareXFiles(
@@ -199,7 +254,7 @@ class _PreviewStepState extends State<PreviewStep> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: TextButton(
-                            onPressed: isSharing ? null : () {
+                            onPressed: isBusy ? null : () {
                               Navigator.pop(context);
                               widget.onComplete();
                             },

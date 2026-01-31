@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:gal/gal.dart';
 import 'package:story_create/models/story_model.dart';
 import 'package:story_create/services/story_service.dart';
 import 'package:story_create/models/mood_model.dart';
@@ -44,31 +45,47 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
     if (_story == null) return;
     
     final story = _story!;
-    final List<XFile> files = [];
     
-    // 1. Add video if available
     if (story.videoOutputPath != null && File(story.videoOutputPath!).existsSync()) {
-      files.add(XFile(story.videoOutputPath!));
-    }
-    
-    // 2. Add all images
-    for (final path in story.imagePaths) {
-      if (File(path).existsSync()) {
-        files.add(XFile(path));
-      }
-    }
-    
-    if (files.isEmpty) {
-      await Share.share(
-        '${story.title}\n\n${story.description}\n\nCreated with @bst2026',
+      await Share.shareXFiles(
+        [XFile(story.videoOutputPath!)],
+        text: '${story.title}\n\nCreated with @bst2026',
         subject: story.title,
       );
     } else {
-      await Share.shareXFiles(
-        files,
-        text: '${story.title}\n\n${story.description}\n\nCreated with @bst2026',
-        subject: story.title,
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Video is still processing or not found.')),
+        );
+      }
+    }
+  }
+
+  void _saveVideoToGallery() async {
+    if (_story == null) return;
+    final story = _story!;
+    
+    if (story.videoOutputPath != null && File(story.videoOutputPath!).existsSync()) {
+      try {
+        await Gal.putVideo(story.videoOutputPath!);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Video saved to gallery!')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error saving video: $e')),
+          );
+        }
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Video is still processing or not found.')),
+        );
+      }
     }
   }
 
@@ -163,6 +180,14 @@ class _StoryDetailScreenState extends State<StoryDetailScreen> {
                   onPressed: () => Navigator.pop(context),
                 ),
                 actions: [
+                  IconButton(
+                    icon: const Icon(Icons.file_download_outlined, size: 18),
+                    style: IconButton.styleFrom(
+                      backgroundColor: isDark ? Colors.black45 : Colors.white70,
+                      foregroundColor: isDark ? Colors.white : Colors.black,
+                    ),
+                    onPressed: _saveVideoToGallery,
+                  ),
                   IconButton(
                     icon: const Icon(Icons.share_rounded, size: 18),
                     style: IconButton.styleFrom(
